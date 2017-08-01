@@ -7,7 +7,7 @@ __all__ = ["config", "graph", "noise", "summary", "supervisor",
 from . import config
 from . import graph
 from . import noise
-from . import summary
+from . import analysis
 from . import supervisor
 from .loader import Loader
 
