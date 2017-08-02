@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-__all__ = ["config", "graph", "noise", "summary", "supervisor",
+__all__ = ["config", "graph", "noise", "analysis", "supervisor",
            "Loader"]
 
 from . import config
