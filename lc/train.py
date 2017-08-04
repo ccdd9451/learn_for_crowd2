@@ -4,10 +4,12 @@
 import numpy as np
 import tensorflow as tf
 import time
+import sys
+
 from . import analysis
 from . import config
 from contextlib import contextmanager
-from xilio import dump
+from xilio import dump, write, append
 
 
 tools = type("Tools", (), {})()
@@ -26,6 +28,7 @@ def epoch_train(tools):
 
     infos, summary, g, _ = sess.run(tools.infos)
     print(config.INFOMESSAGE(infos))
+    sys.stdout.flush()
     tools.reporter(summary, g)
 
     try:
@@ -36,7 +39,7 @@ def epoch_train(tools):
 
 
 @contextmanager
-def training(merge_key=tf.GraphKeys.SUMMARIES):
+def training(merge_key=tf.GraphKeys.SUMMARIES, restore_form=None):
     with tf.Session() as sess:
         graph = tf.get_default_graph()
 
@@ -63,6 +66,10 @@ def training(merge_key=tf.GraphKeys.SUMMARIES):
         writer = tf.summary.FileWriter(path+"/summary", graph)
         summary = tf.summary.merge_all(merge_key)
         saver = tf.train.Saver(tf.get_collection("trainable_variables"))
+        if restore_form:
+            ckpt = tf.train.latest_checkpoint(config.DATANAME+"/"+restore_form)
+            if ckpt:
+                saver.restore(sess, ckpt)
 
         tools.path = path
         tools.sess = sess
@@ -85,7 +92,9 @@ def training(merge_key=tf.GraphKeys.SUMMARIES):
 
 def simple_train(epoch_steps):
     infos = []
+    start_time = time.time()
     with training() as tools:
+        write(tools.path+"/description", config.DISCRIPTION + "\n")
         for i in range(epoch_steps):
             batch_init = tf.get_collection("batch_init")
             tools.sess.run(batch_init)
@@ -95,3 +104,9 @@ def simple_train(epoch_steps):
                 if np.std(recent) < config.STOP_THRESHOLD:
                     break
         dump(tools.path+"/trace", infos)
+        duration = time.time() - start_time
+        append(tools.path+"/description",
+               "Time usage: "+ time.strftime(
+                   "%M minutes, %S seconds",
+                   time.gmtime(duration)) + "\n")
+    return infos

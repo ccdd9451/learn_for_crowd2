@@ -15,7 +15,7 @@ class Loader():
     """
     A loader will be created represents set of data.
     """
-    def __init__(self, name, cut=[0.7, 0.85], size=None, test=False):
+    def __init__(self, d, cut=[0.7, 0.85], size=None, test=False):
         """
         cut: Data boundary between train, valid, test set.
         size: Specific boundary
@@ -33,8 +33,9 @@ class Loader():
         self.cut1 = int(size[1] if size else self.data_size * cut[1])
         self.shape = (self.X.shape[1], self.Y.shape[1])
 
-        config.DATANAME = name
-        np.random.seed(hash(name)%1_0000_0000) # Random 8 digits hash
+        config.DATANAME = d["name"]
+        config.DISCRIPTION = d["discription"]
+        np.random.seed(hash(config.DATANAME)%1_0000_0000) # Random 8 digits hash
         self.train_choices = np.random.choice(self.cut1, self.cut+1, False)
         self.valid_choices = np.array(list(set(range(self.cut1))
                                      -set(self.train_choices)))
@@ -44,17 +45,12 @@ class Loader():
         with tf.name_scope("Dataset"):
             fin = int(min(self.cut, Datasize) if Datasize else self.cut)
             choices = self.train_choices[:fin]
-            dat = lambda data: (
-                Dataset
-                .from_tensor_slices(
-                    data[choices,:].astype(np.float32))
-                .batch(fin)
+            dat = (Dataset
+                .from_tensors(
+                    [d[choices,:].astype(np.float32) for d in [self.X, self.Y]])
                 .make_initializable_iterator())
-            x, y = dat(self.X), dat(self.Y)
-            tf.add_to_collection("batch_init", x.initializer)
-            tf.add_to_collection("batch_init", y.initializer)
-            self._shuffle_batch_init = [x.initializer, y.initializer]
-            return x.get_next("train_x"), y.get_next("train_y")
+            tf.add_to_collection("batch_init", dat.initializer)
+            return dat.get_next("bs_dat")
 
 
     def validation(self, Datasize=None):
@@ -85,22 +81,16 @@ class Loader():
             fin = int(min(self.cut, Datasize) if Datasize else self.cut)
             shuffle_buffer = shuffle_buffer if shuffle_buffer else self.cut
             choices = self.train_choices[:fin]
-            dat = lambda data: (Dataset
-                                .from_tensor_slices(
-                                    data[choices,:].astype(np.float32))
-                                .shuffle(shuffle_buffer)
-                                .batch(batch_size)
-                                .make_initializable_iterator())
-            x, y = dat(self.X), dat(self.Y)
-            tf.add_to_collection("batch_init", x.initializer)
-            tf.add_to_collection("batch_init", y.initializer)
-            self._shuffle_batch_init = [x.initializer, y.initializer]
-            return x.get_next("bs_x"), y.get_next("bs_y")
+            dat = (Dataset
+                   .from_tensor_slices(
+                       [d[choices,:].astype(np.float32) for d in [self.X, self.Y]])
+                   .shuffle(shuffle_buffer)
+                   .batch(batch_size)
+                   .make_initializable_iterator())
+            tf.add_to_collection("batch_init", dat.initializer)
+            return dat.get_next("bs_dat")
 
-    def shuffle_batch_init(self, sess):
-        sess.run(self._shuffle_batch_init)
-
-    def batch_init(self, sess):
+    def train_init(self, sess):
         initializer = tf.get_collection("batch_init")
         sess.run(initializer)
 
