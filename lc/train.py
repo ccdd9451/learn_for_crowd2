@@ -26,10 +26,10 @@ def epoch_train(tools):
     sess = tools.sess
     optimizer = tools.optimizer
 
-    infos, summary, g, _ = sess.run(tools.infos)
+    infos, summary, e, _ = sess.run(tools.infos)
     print(config.INFOMESSAGE(infos))
     sys.stdout.flush()
-    tools.reporter(summary, g)
+    tools.reporter(summary, e)
 
     try:
         while True: sess.run(optimizer)
@@ -71,13 +71,13 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
         tools.sess = sess
         tools.graph = graph
         tools.saver = saver
-        tools.infos = [infos, summary, g, updates]
+        tools.infos = [infos, summary, e, updates]
         tools.optimizer = optimizer
         import types
         def reporter(self, summary, e):
             writer.add_summary(summary, e)
             writer.flush()
-            saver.save(sess, path+"/chkpnt", g)
+            saver.save(sess, path+"/chkpnt", e)
 
         tools.reporter = types.MethodType(reporter, tools)
 
@@ -85,8 +85,7 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
         tf.local_variables_initializer().run(None, sess)
         if restore_form:
             ckpt = tf.train.latest_checkpoint(config.DATANAME+"/"+restore_form)
-            print (config.DATANAME+"/"+restore_form)
-            print (ckpt)
+            print ("restoring file from: " + ckpt)
             if ckpt:
                 saver.restore(sess, ckpt)
         graph.finalize()

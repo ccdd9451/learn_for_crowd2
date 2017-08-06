@@ -17,6 +17,7 @@ DECAY_STEP = 50
 DECAY_RATE = 0.90
 L2_LAMBDA = 0.05
 STOP_THRESHOLD = -1
+KEEP_PROB = 0.5
 
 def details():
     import yaml
