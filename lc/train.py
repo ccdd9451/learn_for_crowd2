@@ -39,7 +39,7 @@ def epoch_train(tools):
 
 
 @contextmanager
-def training(merge_key=tf.GraphKeys.SUMMARIES, restore_form=None):
+def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
     with tf.Session() as sess:
         graph = tf.get_default_graph()
 
@@ -66,10 +66,6 @@ def training(merge_key=tf.GraphKeys.SUMMARIES, restore_form=None):
         writer = tf.summary.FileWriter(path+"/summary", graph)
         summary = tf.summary.merge_all(merge_key)
         saver = tf.train.Saver(tf.get_collection("trainable_variables"))
-        if restore_form:
-            ckpt = tf.train.latest_checkpoint(config.DATANAME+"/"+restore_form)
-            if ckpt:
-                saver.restore(sess, ckpt)
 
         tools.path = path
         tools.sess = sess
@@ -87,14 +83,21 @@ def training(merge_key=tf.GraphKeys.SUMMARIES, restore_form=None):
 
         tf.global_variables_initializer().run(None, sess)
         tf.local_variables_initializer().run(None, sess)
+        if restore_form:
+            ckpt = tf.train.latest_checkpoint(config.DATANAME+"/"+restore_form)
+            print (config.DATANAME+"/"+restore_form)
+            print (ckpt)
+            if ckpt:
+                saver.restore(sess, ckpt)
         graph.finalize()
         yield tools
 
 def simple_train(epoch_steps):
     infos = []
     start_time = time.time()
-    with training() as tools:
-        write(tools.path+"/description", config.DISCRIPTION + "\n")
+    restore_form = getattr(config, "RESTORE_FROM", None)
+    with training(restore_form) as tools:
+        write(tools.path+"/description", config.details() + "\n")
         for i in range(epoch_steps):
             batch_init = tf.get_collection("batch_init")
             tools.sess.run(batch_init)
