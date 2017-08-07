@@ -34,7 +34,7 @@ class Loader():
         self.shape = (self.X.shape[1], self.Y.shape[1])
 
         config.DATANAME = d["name"]
-        config.DISCRIPTION = "\n".join([self.info, d["discription"], ""])
+        config.DISCRIPTION = ",".join([self.info, d["discription"]])
         np.random.seed(hash(config.DATANAME)%1_0000_0000) # Random 8 digits hash
         self.train_choices = np.random.choice(self.cut1, self.cut+1, False)
         self.valid_choices = np.array(list(set(range(self.cut1))
