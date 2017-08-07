@@ -111,4 +111,4 @@ def simple_train(epoch_steps):
                "Time usage: "+ time.strftime(
                    "%M minutes, %S seconds",
                    time.gmtime(duration)) + "\n")
-    return infos
+        return tools.path
