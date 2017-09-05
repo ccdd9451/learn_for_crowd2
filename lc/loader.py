@@ -14,6 +14,12 @@ from . import config
 class Loader():
     """
     A loader will be created represents set of data.
+
+    Reminder:
+    Tensorflow 1.3 has compatibility problem with this code.
+    (Not sure if it caused by Dataset module or any code here,
+    Dataset feeding logic is changed and not able to execute lines
+    like this. Please use Tensorflow 1.2 instead.)
     """
     def __init__(self, d, cut=[0.7, 0.85], size=None, test=False):
         """
@@ -26,6 +32,7 @@ class Loader():
         else:
             self.X = np.random.randint(0, 200, [5000,50])
             self.Y = np.random.randint(0, 200, [5000,1])
+            self.info = "Test cases"
 
         assert self.X.shape[0] == self.Y.shape[0]
         self.data_size = self.X.shape[0]
