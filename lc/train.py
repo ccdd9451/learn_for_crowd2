@@ -55,6 +55,7 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
                 float(config.LEARNING_RATE), e,
                 float(config.DECAY_STEP), float(config.DECAY_RATE)
             )
+            tf.summary.scalar("Learning Rate", learning_rate)
             optimizer = (tf.train.AdamOptimizer(learning_rate)
                          .minimize(fin_loss, global_step=g))
         accur = graph.get_tensor_by_name("analysis/accuracy_train:0")
