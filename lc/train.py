@@ -8,6 +8,7 @@ import sys
 
 from . import analysis
 from . import config
+from . import supervisor
 from contextlib import contextmanager
 from xilio import dump, write, append
 
@@ -16,7 +17,7 @@ tools = type("Tools", (), {})()
 
 __all__ = ["simple_train", "training"]
 
-def epoch_train(tools):
+def epoch_train(tools, **kwargs):
     """
     Do epoch train for one times.
 
@@ -32,7 +33,11 @@ def epoch_train(tools):
     tools.reporter(summary, e)
 
     try:
-        while True: sess.run(optimizer)
+        feed_dict = kwargs.get("feed_dict", None)
+        if not feed_dict:
+            while True: sess.run(optimizer)
+        else:
+            while True: sess.run(optimizer, feed_dict=feed_dict)
     except tf.errors.OutOfRangeError:
         pass
     return infos
@@ -58,6 +63,8 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
             tf.summary.scalar("Learning Rate", learning_rate)
             optimizer = (tf.train.AdamOptimizer(learning_rate)
                          .minimize(fin_loss, global_step=g))
+            tools.learning_rate = learning_rate
+
         accur = graph.get_tensor_by_name("analysis/accuracy_train:0")
         val_accur = graph.get_tensor_by_name("analysis/accuracy_test:0")
         infos = [e,fin_loss, accur, val_accur]
@@ -106,6 +113,36 @@ def simple_train(epoch_steps):
                 recent = [x[1] for x in infos[-5:]]
                 if np.std(recent) < config.STOP_THRESHOLD:
                     break
+        dump(tools.path+"/trace", infos)
+        duration = time.time() - start_time
+        append(tools.path+"/description",
+               "Time usage: "+ time.strftime(
+                   "%M minutes, %S seconds",
+                   time.gmtime(duration)) + "\n")
+        return tools.path
+
+def adaptive_train(max_epoch_steps):
+    learning_rate = config.LEARNING_RATE
+    loss_hist = []
+    infos = []
+    start_time = time.time()
+    restore_form = getattr(config, "RESTORE_FROM", None)
+    with training(restore_form) as tools:
+        write(tools.path+"/description", config.details() + "\n")
+        for i in range(max_epoch_steps):
+            batch_init = tf.get_collection("batch_init")
+            tools.sess.run(batch_init)
+            info = epoch_train(
+                tools,
+                feed_dict={
+                    tools.learning_rate: learning_rate,
+                },
+            )
+            infos.append(info)
+            loss_hist.append(float(info[1]))
+            learning_rate = supervisor.adaptive_learning_rate(learning_rate, loss_hist)
+            if supervisor.early_stop(loss_hist):
+                break
         dump(tools.path+"/trace", infos)
         duration = time.time() - start_time
         append(tools.path+"/description",
