@@ -9,8 +9,6 @@ from tensorflow.contrib.data import Dataset
 from . import config
 
 
-
-
 class Loader():
     """
     A loader will be created represents set of data.
@@ -21,6 +19,7 @@ class Loader():
     Dataset feeding logic is changed and not able to execute lines
     like this. Please use Tensorflow 1.2 instead.)
     """
+
     def __init__(self, d, cut=[0.7, 0.85], size=None, test=False):
         """
         cut: Data boundary between train, valid, test set.
@@ -30,8 +29,8 @@ class Loader():
             with open(config.DATAFILE, "rb") as f:
                 self.__dict__.update(pickle.load(f))
         else:
-            self.X = np.random.randint(0, 200, [5000,50])
-            self.Y = np.random.randint(0, 200, [5000,1])
+            self.X = np.random.randint(0, 200, [5000, 50])
+            self.Y = np.random.randint(0, 200, [5000, 1])
             self.info = "Test cases"
 
         assert self.X.shape[0] == self.Y.shape[0]
@@ -42,28 +41,27 @@ class Loader():
 
         config.DATANAME = d["name"]
         config.DISCRIPTION = ",".join([self.info, d["discription"]])
-        np.random.seed(hash(config.DATANAME)%1_0000_0000) # Random 8 digits hash
-        self.train_choices = np.random.choice(self.cut1, self.cut+1, False)
-        self.valid_choices = np.array(list(set(range(self.cut1))
-                                     -set(self.train_choices)))
-
+        np.random.seed(
+            hash(config.DATANAME) % 1_0000_0000)  # Random 8 digits hash
+        self.train_choices = np.random.choice(self.cut1, self.cut + 1, False)
+        self.valid_choices = np.array(
+            list(set(range(self.cut1)) - set(self.train_choices)))
 
     def train(self, Datasize=None):
         with tf.name_scope("Dataset"):
             fin = int(min(self.cut, Datasize) if Datasize else self.cut)
             choices = self.train_choices[:fin]
-            dat = (Dataset
-                .from_tensors(
-                    [d[choices,:].astype(np.float32) for d in [self.X, self.Y]])
-                .make_initializable_iterator())
+            dat = (Dataset.from_tensors(
+                tuple(d[choices, :].astype(np.float32) for d in
+                      [self.X, self.Y])).make_initializable_iterator())
             tf.add_to_collection("batch_init", dat.initializer)
             return dat.get_next("bs_dat")
 
-
     def validation(self, Datasize=None):
         with tf.name_scope("Dataset"):
-            fin = int(min(self.cut1-self.cut, Datasize)
-                    if Datasize else self.cut1-self.cut)
+            fin = int(
+                min(self.cut1 - self.cut, Datasize)
+                if Datasize else self.cut1 - self.cut)
             choices = self.valid_choices[:fin]
             mod = lambda data, name: (tf.convert_to_tensor(
                 data[choices,:].astype(np.float32),
@@ -80,25 +78,19 @@ class Loader():
             ))
             return mod(self.X, "test_x"), mod(self.Y, "test_y")
 
-    def shuffle_batch(self,
-                      shuffle_buffer=None,
-                      batch_size=100,
+    def shuffle_batch(self, shuffle_buffer=None, batch_size=100,
                       Datasize=None):
         with tf.name_scope("Dataset"):
             fin = int(min(self.cut, Datasize) if Datasize else self.cut)
             shuffle_buffer = shuffle_buffer if shuffle_buffer else self.cut
             choices = self.train_choices[:fin]
-            dat = (Dataset
-                   .from_tensor_slices(
-                       [d[choices,:].astype(np.float32) for d in [self.X, self.Y]])
-                   .shuffle(shuffle_buffer)
-                   .batch(batch_size)
-                   .make_initializable_iterator())
+            dat = (Dataset.from_tensor_slices(
+                tuple(d[choices, :].astype(np.float32)
+                      for d in [self.X, self.Y])).shuffle(shuffle_buffer)
+                   .batch(batch_size).make_initializable_iterator())
             tf.add_to_collection("batch_init", dat.initializer)
             return dat.get_next("bs_dat")
 
     def train_init(self, sess):
         initializer = tf.get_collection("batch_init")
         sess.run(initializer)
-
-

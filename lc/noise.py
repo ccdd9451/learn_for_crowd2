@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 
-
 def train(x, amp=1):
     """
     input: (batch_size, dim1) shape tensor
@@ -10,6 +9,7 @@ def train(x, amp=1):
         with noise amplified by amp.
     """
     pass
+
 
 def test(x):
     """
