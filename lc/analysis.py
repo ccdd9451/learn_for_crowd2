@@ -9,12 +9,15 @@ __all__ = ["add_L2_loss", "add_RMSE_loss", "fin_loss"]
 
 with tf.name_scope("analysis") as analysis:
     pass
-with tf.name_scope("visuals") as visuals:
-    pass
-with tf.name_scope("mean") as mean_ns:
-    pass
-with tf.name_scope("std") as std_ns:
-    pass
+
+with tf.name_scope("analysis_detail"):
+    with tf.name_scope("visuals") as visuals:
+        pass
+    with tf.name_scope("mean") as mean_ns:
+        pass
+    with tf.name_scope("std") as std_ns:
+        pass
+
 with tf.name_scope("loss") as loss_ns:
     pass
 
@@ -63,7 +66,9 @@ def fin_loss():
     with tf.name_scope(analysis):
         fin_loss = tf.identity(
             sum(tf.get_collection("losses")), name="fin_loss")
-        return fin_loss
+    with tf.name_scope(visuals):
+        tf.add_to_collection("visuals", fin_loss)
+    return fin_loss
 
 
 def collect_summaries(collections):

@@ -13,11 +13,6 @@ class Loader():
     """
     A loader will be created represents set of data.
 
-    Reminder:
-    Tensorflow 1.3 has compatibility problem with this code.
-    (Not sure if it caused by Dataset module or any code here,
-    Dataset feeding logic is changed and not able to execute lines
-    like this. Please use Tensorflow 1.2 instead.)
     """
 
     def __init__(self, d, cut=[0.7, 0.85], size=None, test=False):

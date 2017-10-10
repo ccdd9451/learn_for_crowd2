@@ -27,7 +27,7 @@ def epoch_train(tools, **kwargs):
     sess = tools.sess
     optimizer = tools.optimizer
 
-    feed_dict = kwargs.get("feed_dict", dict)
+    feed_dict = kwargs.get("feed_dict", {})
 
     infos, summary, e, _ = sess.run(tools.infos, feed_dict=feed_dict)
     print(config.INFOMESSAGE(infos))
@@ -112,24 +112,29 @@ def simple_train(epoch_steps):
     restore_form = getattr(config, "RESTORE_FROM", None)
     with training(restore_form) as tools:
         write(tools.path + "/description", config.details() + "\n")
-        for i in range(epoch_steps):
-            batch_init = tf.get_collection("batch_init")
-            tools.sess.run(batch_init)
-            infos.append(epoch_train(tools))
-            if i > 5:
-                recent = [x[1] for x in infos[-5:]]
-                if np.std(recent) < config.STOP_THRESHOLD:
-                    break
-        dump(tools.path + "/trace", infos)
-        duration = time.time() - start_time
-        append(tools.path + "/description", "Time usage: " + time.strftime(
-            "%M minutes, %S seconds", time.gmtime(duration)) + "\n")
+        try:
+            for i in range(epoch_steps):
+                batch_init = tf.get_collection("batch_init")
+                tools.sess.run(batch_init)
+                infos.append(epoch_train(tools))
+                if i > 5:
+                    recent = [x[1] for x in infos[-5:]]
+                    if np.std(recent) < config.STOP_THRESHOLD:
+                        break
+        except KeyboardInterrupt:
+            pass
+        finally:
+            dump(tools.path + "/trace", infos)
+            duration = time.time() - start_time
+            append(tools.path + "/description", "Time usage: " + time.strftime(
+                "%M minutes, %S seconds", time.gmtime(duration)) + "\n")
         return tools.path
 
 
 def adaptive_train(max_epoch_steps):
     learning_rate = config.LEARNING_RATE
     loss_hist = []
+    accur_hist = []
     infos = []
     start_time = time.time()
     restore_form = getattr(config, "RESTORE_FROM", None)
@@ -145,10 +150,11 @@ def adaptive_train(max_epoch_steps):
                         tools.learning_rate: learning_rate,
                     }, )
                 infos.append(info)
-                loss_hist.append(float(info[3]))
+                loss_hist.append(float(info[1]))
+                accur_hist.append(float(info[3]))
                 if not i % (config.DECAY_STEP / 3):
                     learning_rate = supervisor.adaptive_learning_rate(
-                        learning_rate, loss_hist)
+                        learning_rate, loss_hist, accur_hist)
                 if not i % 100 and supervisor.early_stop(
                         learning_rate, loss_hist):
                     break
