@@ -27,13 +27,14 @@ def epoch_train(tools, **kwargs):
     sess = tools.sess
     optimizer = tools.optimizer
 
-    infos, summary, e, _ = sess.run(tools.infos)
+    feed_dict = kwargs.get("feed_dict", dict)
+
+    infos, summary, e, _ = sess.run(tools.infos, feed_dict=feed_dict)
     print(config.INFOMESSAGE(infos))
     sys.stdout.flush()
     tools.reporter(summary, e)
 
     try:
-        feed_dict = kwargs.get("feed_dict", None)
         if not feed_dict:
             while True:
                 sess.run(optimizer)
@@ -62,14 +63,18 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
                 float(config.LEARNING_RATE), e,
                 float(config.DECAY_STEP), float(config.DECAY_RATE))
             tf.summary.scalar("Learning Rate", learning_rate)
-            optimizer = (tf.train.AdamOptimizer(learning_rate).minimize(
-                fin_loss, global_step=g))
             tools.learning_rate = learning_rate
+
+            optimizer = tf.train.AdamOptimizer(learning_rate)
+            train_op = optimizer.minimize(fin_loss, global_step=g)
+            # gradients = optimizer.compute_gradients(fin_loss)
+            # capped_gradients = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gradients if grad is not None]
+            # train_op = optimizer.apply_gradients(capped_gradients, global_step=g)
 
         accur = graph.get_tensor_by_name("analysis/accuracy_train:0")
         val_accur = graph.get_tensor_by_name("analysis/accuracy_test:0")
         infos = [e, fin_loss, accur, val_accur]
-        updates = [e_add, optimizer]
+        updates = [e_add, train_op]
 
         writer = tf.summary.FileWriter(path + "/summary", graph)
         summary = tf.summary.merge_all(merge_key)
@@ -80,7 +85,7 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
         tools.graph = graph
         tools.saver = saver
         tools.infos = [infos, summary, e, updates]
-        tools.optimizer = optimizer
+        tools.optimizer = train_op
         import types
 
         def reporter(self, summary, e):
@@ -93,8 +98,7 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
         tf.global_variables_initializer().run(None, sess)
         tf.local_variables_initializer().run(None, sess)
         if restore_form:
-            ckpt = tf.train.latest_checkpoint(config.DATANAME + "/" +
-                                              restore_form)
+            ckpt = tf.train.latest_checkpoint(restore_form)
             print("restoring file from: " + ckpt)
             if ckpt:
                 saver.restore(sess, ckpt)
@@ -131,22 +135,28 @@ def adaptive_train(max_epoch_steps):
     restore_form = getattr(config, "RESTORE_FROM", None)
     with training(restore_form) as tools:
         write(tools.path + "/description", config.details() + "\n")
-        for i in range(max_epoch_steps):
-            batch_init = tf.get_collection("batch_init")
-            tools.sess.run(batch_init)
-            info = epoch_train(
-                tools,
-                feed_dict={
-                    tools.learning_rate: learning_rate,
-                }, )
-            infos.append(info)
-            loss_hist.append(float(info[3]))
-            learning_rate = supervisor.adaptive_learning_rate(
-                learning_rate, loss_hist)
-            if not i % 100 and supervisor.early_stop(learning_rate, loss_hist):
-                break
-        dump(tools.path + "/trace", infos)
-        duration = time.time() - start_time
-        append(tools.path + "/description", "Time usage: " + time.strftime(
-            "%M minutes, %S seconds", time.gmtime(duration)) + "\n")
-        return tools.path
+        try:
+            for i in range(max_epoch_steps):
+                batch_init = tf.get_collection("batch_init")
+                tools.sess.run(batch_init)
+                info = epoch_train(
+                    tools,
+                    feed_dict={
+                        tools.learning_rate: learning_rate,
+                    }, )
+                infos.append(info)
+                loss_hist.append(float(info[3]))
+                if not i % (config.DECAY_STEP / 3):
+                    learning_rate = supervisor.adaptive_learning_rate(
+                        learning_rate, loss_hist)
+                if not i % 100 and supervisor.early_stop(
+                        learning_rate, loss_hist):
+                    break
+        except KeyboardInterrupt:
+            pass
+        finally:
+            dump(tools.path + "/trace", infos)
+            duration = time.time() - start_time
+            append(tools.path + "/description", "Time usage: " + time.strftime(
+                "%M minutes, %S seconds", time.gmtime(duration)) + "\n")
+        return str(tools.path)
