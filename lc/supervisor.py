@@ -19,15 +19,17 @@ def adaptive_learning_rate(lRate, loss_history, laccur):
                  (len(loss_history) / config.DECAY_STEP))
     decay_refh = (config.LEARNING_RATE * config.DECAY_RATE**
                   ((len(loss_history)-200) /2/ config.DECAY_STEP))
+
+    if (len(laccur)> 101 and std(laccur[-100:]) / mean(laccur[-100:]) < 0.001):
+        Neural_Tuning = len(loss_history)
+        if not config.VERBOSE_EACH:
+            print("Network tuning started")
+
     if (diff_test(loss_history, 100, 0.5, 5) and diff_test(loss_history, 30, 0.5, 3) and lRate > decay_ref):
-        new_lRate = lRate * config.DECAY_RATE
         if not config.VERBOSE_EACH:
             print("           Current learning rate %.4e" % new_lRate)
-        if (std(laccur[-100:]) / mean(laccur[-100:]) < 0.001):
-            Neural_Tuning = len(loss_history)
-            if not config.VERBOSE_EACH:
-                print("Network tuning started")
         return new_lRate
+
     elif (lRate > decay_refh):
         if not config.VERBOSE_EACH:
             print("           Current learning rate %.4e" % new_lRate)
