@@ -30,7 +30,11 @@ def epoch_train(tools, **kwargs):
     feed_dict = kwargs.get("feed_dict", {})
 
     infos, summary, e, _ = sess.run(tools.infos, feed_dict=feed_dict)
-    print(config.INFOMESSAGE(infos))
+    if config.VERBOSE_EACH:
+        if not int(infos[0]) % config.VERBOSE_EACH:
+            print(config.INFOMESSAGE(infos))
+    else:
+        print(config.INFOMESSAGE(infos))
     sys.stdout.flush()
     tools.reporter(summary, e)
 
@@ -152,7 +156,7 @@ def adaptive_train(max_epoch_steps):
                 infos.append(info)
                 loss_hist.append(float(info[1]))
                 accur_hist.append(float(info[3]))
-                if not i % (config.DECAY_STEP / 3):
+                if not i % int(config.DECAY_STEP / 3):
                     learning_rate = supervisor.adaptive_learning_rate(
                         learning_rate, loss_hist, accur_hist)
                 if not i % 100 and supervisor.early_stop(
