@@ -31,12 +31,15 @@ def epoch_train(tools, **kwargs):
 
     infos, summary, e, _ = sess.run(tools.infos, feed_dict=feed_dict)
     if config.VERBOSE_EACH:
-        if not int(infos[0]) % config.VERBOSE_EACH:
+        if not int(e) % config.VERBOSE_EACH:
             print(config.INFOMESSAGE(infos))
+            sys.stdout.flush()
     else:
         print(config.INFOMESSAGE(infos))
-    sys.stdout.flush()
-    tools.reporter(summary, e)
+        sys.stdout.flush()
+
+    if not int(e) % 100:
+        tools.reporter(summary, e)
 
     try:
         if not feed_dict:
