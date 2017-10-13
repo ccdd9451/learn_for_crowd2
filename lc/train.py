@@ -66,7 +66,7 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
             learning_rate = tf.train.exponential_decay(
                 float(config.LEARNING_RATE), e,
                 float(config.DECAY_STEP), float(config.DECAY_RATE))
-            tf.add_to_collection("rates", learning_rate)
+            tf.summary.scalar("learning_rate", learning_rate)
             tools.learning_rate = learning_rate
 
             optimizer = tf.train.AdamOptimizer(learning_rate)
