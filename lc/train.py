@@ -66,7 +66,7 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
             learning_rate = tf.train.exponential_decay(
                 float(config.LEARNING_RATE), e,
                 float(config.DECAY_STEP), float(config.DECAY_RATE))
-            tf.summary.scalar("Learning Rate", learning_rate)
+            tf.add_to_collection("rates", learning_rate)
             tools.learning_rate = learning_rate
 
             optimizer = tf.train.AdamOptimizer(learning_rate)
@@ -169,4 +169,4 @@ def adaptive_train(max_epoch_steps):
             duration = time.time() - start_time
             append(tools.path + "/description", "Time usage: " + time.strftime(
                 "%M minutes, %S seconds", time.gmtime(duration)) + "\n")
-        return str(tools.path)
+        return str(tools.path), infos[-1]
