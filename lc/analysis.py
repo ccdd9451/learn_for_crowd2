@@ -28,6 +28,7 @@ def L2_loss(weight, name):
         l2_loss = scale * tf.reduce_sum(tf.square(weight))
         loss = tf.identity(l2_loss, name=name)
         tf.add_to_collection("losses", loss)
+        tf.add_to_collection("visuals", loss)
 
 
 def variance(tensor, name):
@@ -58,8 +59,9 @@ def add_RMSE_loss(y, ref_y, suffix):
     with tf.name_scope(visuals):
         if suffix == "train":
             tf.add_to_collection("losses", accuracy)
+            tf.add_to_collection("rates", accuracy)
         else:
-            tf.add_to_collection("visuals", accuracy)
+            tf.add_to_collection("rates", accuracy)
 
 
 def fin_loss():
@@ -67,7 +69,7 @@ def fin_loss():
         fin_loss = tf.identity(
             sum(tf.get_collection("losses")), name="fin_loss")
     with tf.name_scope(visuals):
-        tf.add_to_collection("visuals", fin_loss)
+        tf.add_to_collection("rates", fin_loss)
     return fin_loss
 
 
