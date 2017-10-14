@@ -38,8 +38,7 @@ def epoch_train(tools, **kwargs):
         print(config.INFOMESSAGE(infos))
         sys.stdout.flush()
 
-    if not int(e) % 100:
-        tools.reporter(summary, e)
+    tools.reporter(summary, e)
 
     try:
         if not feed_dict:
@@ -98,7 +97,8 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
         def reporter(self, summary, e):
             writer.add_summary(summary, e)
             writer.flush()
-            saver.save(sess, path + "/chkpnt", e)
+            if not int(e) % 500:
+                saver.save(sess, path + "/chkpnt", e)
 
         tools.reporter = types.MethodType(reporter, tools)
 
@@ -135,7 +135,7 @@ def simple_train(epoch_steps):
             duration = time.time() - start_time
             append(tools.path + "/description", "Time usage: " + time.strftime(
                 "%M minutes, %S seconds", time.gmtime(duration)) + "\n")
-        return tools.path
+        return tools.path, infos[-1]
 
 
 def adaptive_train(max_epoch_steps):
