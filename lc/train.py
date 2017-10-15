@@ -135,7 +135,8 @@ def simple_train(epoch_steps):
             duration = time.time() - start_time
             append(tools.path + "/description", "Time usage: " + time.strftime(
                 "%M minutes, %S seconds", time.gmtime(duration)) + "\n")
-        return tools.path, infos[-1]
+
+        return str(tools.path), infos[-1]
 
 
 def adaptive_train(max_epoch_steps):
