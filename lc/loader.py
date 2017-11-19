@@ -18,7 +18,7 @@ class Loader():
     def __init__(self, d, cut=[0.7, 0.85], size=None, test=False):
         """
         cut: Data boundary between train, valid, test set.
-        size: Specific boundary
+        size: Specific boundary, int, as train data
         """
         if not test:
             with open(config.DATAFILE, "rb") as f:
@@ -30,8 +30,8 @@ class Loader():
 
         assert self.X.shape[0] == self.Y.shape[0]
         self.data_size = self.X.shape[0]
-        self.cut = int(size[1] if size else self.data_size * cut[0])
-        self.cut1 = int(size[1] if size else self.data_size * cut[1])
+        self.cut = int(self.data_size * cut[0])
+        self.cut1 = int(self.data_size * cut[1])
         self.shape = (self.X.shape[1], self.Y.shape[1])
 
         config.DATANAME = d["name"]
@@ -39,6 +39,8 @@ class Loader():
         np.random.seed(
             hash(config.DATANAME) % 1_0000_0000)  # Random 8 digits hash
         self.train_choices = np.random.choice(self.cut1, self.cut + 1, False)
+        if size:
+            self.train_choices = self.train_choices[:size]
         self.valid_choices = np.array(
             list(set(range(self.cut1)) - set(self.train_choices)))
 
