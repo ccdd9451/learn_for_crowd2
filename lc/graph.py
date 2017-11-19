@@ -7,7 +7,8 @@
 
 from . import config
 
-def max_out(inputs, num_units=config.NUM_UNIT, axis=None):
+def max_out(inputs, num_units=None, axis=None):
+    num_units = num_units if num_units else config.NUM_UNIT
     shape = inputs.get_shape().as_list()
     if shape[0] is None:
         shape[0] = -1
