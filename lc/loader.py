@@ -5,7 +5,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.contrib.data import Dataset
+from tensorflow.python.data import Dataset
 from . import config
 
 

@@ -5,6 +5,7 @@
    will be imported as differend classes.
 """
 
+import tensorflow as tf
 from . import config
 
 def max_out(inputs, num_units=None, axis=None):
