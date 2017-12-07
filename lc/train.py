@@ -124,10 +124,6 @@ def simple_train(epoch_steps):
                 batch_init = tf.get_collection("batch_init")
                 tools.sess.run(batch_init)
                 infos.append(epoch_train(tools))
-                if i > 5:
-                    recent = [x[1] for x in infos[-5:]]
-                    if np.std(recent) < config.STOP_THRESHOLD:
-                        break
         except KeyboardInterrupt:
             pass
         finally:
