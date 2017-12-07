@@ -7,6 +7,8 @@ import numpy as np
 
 data = [load(x) for x in Path(".").glob("*_avg")]
 
+x = data[0]["X"]
+print(np.max(x, 0)-np.min(x, 0))
 for d in data:
     print(d["info"])
     print(d["X"].shape)
