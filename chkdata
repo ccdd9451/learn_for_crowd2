@@ -5,6 +5,8 @@ from xilio import load
 from pathlib import Path
 import numpy as np
 
+np.set_printoptions(precision=2, suppress=True)
+
 data = [load(x) for x in Path(".").glob("*_avg")]
 
 x = data[0]["X"]
