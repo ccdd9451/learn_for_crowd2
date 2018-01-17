@@ -1,4 +1,4 @@
-#!env python
+#!env python3
 # coding: utf-8
 # Dep: learn for crowd2
 # at - 3ae527e
@@ -12,7 +12,7 @@ from lc import train, config, analysis, Loader, graph
 from tensorflow.contrib.layers import fully_connected, summarize_collection
 from xilio import dump
 
-config.NUM_UNIT = 10
+config.NUM_UNIT = 20
 config.DATASIZE = 256
 config.STOP_THRESHOLD = 10**-8
 config.VERBOSE_EACH = 500
@@ -24,7 +24,7 @@ def five_layers(x, ref_y, test):
     for i in range(6):
         x = fully_connected(
             x,
-            1000,
+            2000,
             activation_fn=activation,
             reuse=test,
             scope="layer" + str(i))

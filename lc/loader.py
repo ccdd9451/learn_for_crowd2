@@ -37,7 +37,7 @@ class Loader():
         config.DATANAME = d["name"]
         config.DISCRIPTION = ",".join([self.info, d["discription"]])
         np.random.seed(
-            hash(config.DATANAME) % 1_0000_0000)  # Random 8 digits hash
+            hash(config.DATANAME) % 100000000)  # Random 8 digits hash
         self.train_choices = np.random.choice(self.cut1, self.cut + 1, False)
         if size:
             self.train_choices = self.train_choices[:size]

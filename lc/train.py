@@ -97,7 +97,7 @@ def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
         def reporter(self, summary, e):
             writer.add_summary(summary, e)
             writer.flush()
-            if not int(e) % 500:
+            if not int(e) % config.VERBOSE_EACH:
                 saver.save(sess, path + "/chkpnt", e)
 
         tools.reporter = types.MethodType(reporter, tools)
