@@ -108,7 +108,7 @@ def train(dataSet, dataSize=None)
 
     config.DATAFILE = dataSet
     d = {"name": "d" + i[:-4], "discription": "massive screen on " + i}
-    nestedData = Loader(d, size=dataSize)
+    nestedData = Loader(d, size=int(dataSize))
     trainOnD()
 
     dump("summary.dat", [scanRange, result])
