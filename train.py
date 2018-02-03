@@ -16,7 +16,7 @@ from xilio import dump
 
 
 config.NUM_UNIT = 20
-config.DATASIZE = 256
+config.BATCHSIZE = 256
 config.STOP_THRESHOLD = 10**-8
 config.VERBOSE_EACH = 500
 
@@ -45,9 +45,9 @@ def apply_graph(graph, BGD=True):
     with g1.as_default():
         with tf.name_scope("train_net"):
             if BGD:
-                x1, y1 = nestedData.shuffle_batch(batch_size=config.DATASIZE)
+                x1, y1 = nestedData.shuffle_batch(batch_size=config.BATCHSIZE, Datasize=config.DATASIZE)
             else:
-                x1, y1 = nestedData.train()
+                x1, y1 = nestedData.train(Datasize=config.DATASIZE)
 
             graph(x1, y1, False)
 
@@ -107,8 +107,9 @@ def train(dataSet, dataSize=None)
     print("Project start at ", time.ctime())
 
     config.DATAFILE = dataSet
+    config.DATASIZE = int(dataSize)
     d = {"name": "d" + i[:-4], "discription": "massive screen on " + i}
-    nestedData = Loader(d, size=int(dataSize))
+    nestedData = Loader(d)
     trainOnD()
 
     dump("summary.dat", [scanRange, result])
