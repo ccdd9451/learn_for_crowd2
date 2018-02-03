@@ -7,10 +7,13 @@ import tensorflow as tf
 import time
 import datetime
 import numpy as np
+import fire
+
 from pathlib import Path
 from lc import train, config, analysis, Loader, graph
 from tensorflow.contrib.layers import fully_connected, summarize_collection
 from xilio import dump
+
 
 config.NUM_UNIT = 20
 config.DATASIZE = 256
@@ -97,15 +100,20 @@ def trainOnD():
         timeReport(d)
 
 
-result = []
-startTime = time.time()
-scanRange = np.geomspace(0.0005, 0.1, 8)
-print("Project start at ", time.ctime())
+def train(dataSet, dataSize=None)
+    result = []
+    startTime = time.time()
+    scanRange = np.geomspace(0.0005, 0.1, 8)
+    print("Project start at ", time.ctime())
 
-for i in map(str, Path(".").glob("*_avg")):
-    config.DATAFILE = i
+    config.DATAFILE = dataSet
     d = {"name": "d" + i[:-4], "discription": "massive screen on " + i}
-    nestedData = Loader(d)
+    nestedData = Loader(d, size=dataSize)
     trainOnD()
 
-dump("summary.dat", [scanRange, result])
+    dump("summary.dat", [scanRange, result])
+    print("best result is")
+    print(max(result, key=lambda x: x[-1][-1][-1]))
+
+if __name__ == "__main__":
+    fire.Fire()
