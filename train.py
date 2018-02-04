@@ -1,4 +1,4 @@
-#!env python3
+#!python3
 # coding: utf-8
 # Dep: learn for crowd2
 # at - 3ae527e
@@ -15,7 +15,6 @@ from tensorflow.contrib.layers import fully_connected, summarize_collection
 from xilio import dump
 
 
-config.NUM_UNIT = 20
 config.BATCHSIZE = 256
 config.STOP_THRESHOLD = 10**-8
 config.VERBOSE_EACH = 500
@@ -100,13 +99,17 @@ def trainOnD():
         timeReport(d)
 
 
-def train(dataSet, dataSize=None)
+def main(dataSet, dataSize=None, numUnit=10):
+    global nestedData
+    global result
     result = []
     startTime = time.time()
     scanRange = np.geomspace(0.0005, 0.1, 8)
     print("Project start at ", time.ctime())
+    config.NUM_UNIT = numUnit
 
     config.DATAFILE = dataSet
+    i = dataSet
     config.DATASIZE = int(dataSize)
     d = {"name": "d" + i[:-4], "discription": "massive screen on " + i}
     nestedData = Loader(d)
