@@ -54,7 +54,10 @@ def epoch_train(tools, **kwargs):
 
 @contextmanager
 def training(restore_form=None, merge_key=tf.GraphKeys.SUMMARIES):
-    with tf.Session() as sess:
+    run_config = tf.ConfigProto()
+    run_config.gpu_options.allow_growth=True
+
+    with tf.Session(config=run_config) as sess:
         graph = tf.get_default_graph()
 
         path = config.DATANAME + "/" + time.strftime("%m-%d-%y_%H:%M")
