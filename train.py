@@ -104,6 +104,9 @@ def main(dataSet, dataSize=None, numUnit=10):
     global result
     global startTime
     global scanRange
+    run_config = tf.ConfigProto()
+    run_config.gpu_options.allow_growth=True
+
     result = []
     startTime = time.time()
     scanRange = np.geomspace(0.0005, 0.1, 8)
