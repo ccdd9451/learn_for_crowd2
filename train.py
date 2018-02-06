@@ -1,4 +1,4 @@
-#!python3
+#!env python3
 # coding: utf-8
 # Dep: learn for crowd2
 # at - 3ae527e
@@ -102,6 +102,8 @@ def trainOnD():
 def main(dataSet, dataSize=None, numUnit=10):
     global nestedData
     global result
+    global startTime
+    global scanRange
     result = []
     startTime = time.time()
     scanRange = np.geomspace(0.0005, 0.1, 8)
