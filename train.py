@@ -119,7 +119,7 @@ def main(dataSet, dataSize=None, numUnit=10):
 
     dump("summary.dat", [scanRange, result])
     print("best result is")
-    print(max(result, key=lambda x: x[-1][-1][-1]))
+    print(min(result, key=lambda x: x[-1][-1][-1]))
 
 if __name__ == "__main__":
     fire.Fire()
